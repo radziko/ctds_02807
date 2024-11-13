@@ -1,8 +1,9 @@
 # %%
+import os
 import pandas as pd
 from collections import defaultdict
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
 import pickle
 
 # %%
@@ -33,7 +34,9 @@ def process_group(movie_id, group):
     return local_edges
 
 
-with ThreadPoolExecutor() as executor:
+cpus = os.cpu_count()
+
+with ProcessPoolExecutor(max_workers=cpus) as executor:
     print("Creating tasks")
     futures = {
         executor.submit(process_group, movie_id, group): movie_id
