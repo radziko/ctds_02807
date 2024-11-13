@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+from concurrent.futures import as_completed, ProcessPoolExecutor
 import pickle
 
 # %%
@@ -24,8 +24,11 @@ edges = defaultdict(lambda: 0)
 ratings_filtered = ratings.query("rating >= 4")
 
 
-def process_group(movie_id, group):
-    local_edges = defaultdict(lambda: 0)
+def process_group(group):
+    def default_value():
+        return 0
+
+    local_edges = defaultdict(default_value)
     users = group["userId"].values
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
@@ -34,18 +37,18 @@ def process_group(movie_id, group):
     return local_edges
 
 
-cpus = os.cpu_count() // 2
+cpus = os.cpu_count()
 
 print(f"Using {cpus} CPUs")
 
 with ProcessPoolExecutor(max_workers=cpus) as executor:
-    print("Creating tasks")
     futures = {
-        executor.submit(process_group, movie_id, group): movie_id
+        executor.submit(process_group, group): movie_id
         for movie_id, group in tqdm(
             ratings_filtered.groupby("movieId"), desc="Creating tasks"
         )
     }
+
     print("Processing ratings")
     for future in tqdm(
         as_completed(futures), total=len(futures), desc="Processing ratings"
