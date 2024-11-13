@@ -34,9 +34,11 @@ def process_group(movie_id, group):
     return local_edges
 
 
-cpus = os.cpu_count()
+cpus = os.cpu_count() // 2
 
-with ThreadPoolExecutor(max_workers=cpus) as executor:
+print(f"Using {cpus} CPUs")
+
+with ProcessPoolExecutor(max_workers=cpus) as executor:
     print("Creating tasks")
     futures = {
         executor.submit(process_group, movie_id, group): movie_id
