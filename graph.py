@@ -36,7 +36,7 @@ def process_group(movie_id, group):
 
 cpus = os.cpu_count()
 
-with ProcessPoolExecutor(max_workers=cpus) as executor:
+with ThreadPoolExecutor(max_workers=cpus) as executor:
     print("Creating tasks")
     futures = {
         executor.submit(process_group, movie_id, group): movie_id
