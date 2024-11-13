@@ -12,6 +12,8 @@
 #BSUB -W 0:30
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=64GB]"
+#BSUB -R "select[gpu80gb]"
+#BSUB -R "span[hosts=1]"
 ### -- set the email address --
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
