@@ -62,13 +62,15 @@ results = Parallel(n_jobs=-1)(
 )
 
 # Combine the results
-for local_edges in results:
+for local_edges in tqdm(results, desc="Combining results"):
     for key, value in local_edges.items():
         edges[key] += value
 
 # %%
 # Convert the edges to a pyarrow table
 import pyarrow as pa
+
+print("Save the edges to a parquet file")
 
 edges_table = pa.Table.from_pandas(
     pd.DataFrame(
