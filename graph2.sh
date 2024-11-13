@@ -1,7 +1,7 @@
 #!/bin/bash
 #BSUB -J GraphBuilder
 #BSUB -q hpc
-#BSUB -R "rusage[mem=4GB]"
+#BSUB -R "rusage[mem=8GB]"
 #BSUB -B
 #BSUB -N
 ##BSUB -u s204071@dtu.dk

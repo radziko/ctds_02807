@@ -17,11 +17,27 @@ ratings = ratings[ratings["movieId"].isin(movie_descs["movieId"])]
 
 # %%
 
+org_len = len(ratings)
+
+# Remove all ratings that are less than 4
+ratings_filtered = ratings.query("rating >= 4")
+
+rating_filtered_len = len(ratings_filtered)
+
+print(f"Ratings left after filtering: {rating_filtered_len}/{org_len}")
+
+# Only take the top 1000 movies ordered by the number of ratings
+top_movies = ratings_filtered["movieId"].value_counts().head(1000).index
+
+ratings_filtered = ratings_filtered[ratings_filtered["movieId"].isin(top_movies)]
+
+print(f"Movies left after filtering: {len(top_movies)}/{len(movie_descs)}")
+
+
+# %%
+
 # Create an edgelist from the dataframe
 edges = defaultdict(lambda: 0)
-
-ratings_filtered = ratings.query("rating >= 4")
-# %%
 
 movies_per_user = ratings_filtered.groupby("userId").apply(
     lambda x: x["movieId"].values
@@ -51,7 +67,18 @@ for local_edges in results:
         edges[key] += value
 
 # %%
-# Save it to a pickle file
+# Convert the edges to a pyarrow table
+import pyarrow as pa
 
-with open("data/edges.pkl", "wb") as f:
-    pickle.dump(edges, f)
+edges_table = pa.Table.from_pandas(
+    pd.DataFrame(
+        [
+            {"movie1": key[0], "movie2": key[1], "weight": value}
+            for key, value in edges.items()
+        ]
+    )
+)
+
+# %%
+# Save the table to a file
+edges_table.to_pandas().to_parquet("data/edges.parquet")
