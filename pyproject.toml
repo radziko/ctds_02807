@@ -1,0 +1,22 @@
+[project]
+name = "ctds-02807"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cucim-cu12==24.10.*",
+    "cudf-cu12==24.10.*",
+    "cugraph-cu12==24.10.*",
+    "cuml-cu12==24.10.*",
+    "cuproj-cu12==24.10.*",
+    "cuspatial-cu12==24.10.*",
+    "cuvs-cu12==24.10.*",
+    "cuxfilter-cu12==24.10.*",
+    "dask-cudf-cu12==24.10.*",
+    "jupyter>=1.1.1",
+    "numpy>=2.0.2",
+    "nx-cugraph-cu12==24.10.*",
+    "pylibraft-cu12==24.10.*",
+    "raft-dask-cu12==24.10.*",
+]
