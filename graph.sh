@@ -8,7 +8,7 @@
 #BSUB -o Output_%J.out
 #BSUB -e Output_%J.err
 #BSUB -W 08:00 
-#BSUB -n 64
+#BSUB -n 32
 #BSUB -R "span[hosts=1]"
 
 source .venv/bin/activate
