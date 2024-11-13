@@ -12,7 +12,7 @@ G.from_cudf_edgelist(edges, source="movie1", destination="movie2", edge_attr="we
 
 # Calculate weighted jaccard similarity
 
-jaccard_weighted = cugraph.jaccard(G, use_weights=True)
+jaccard_weighted = cugraph.jaccard(G, use_weight=True)
 
 # Write the results
 jaccard_weighted.to_pandas().to_parquet("data/jaccard_weighted.parquet")
