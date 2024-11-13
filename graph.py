@@ -25,15 +25,12 @@ ratings_filtered = ratings.query("rating >= 4")
 
 
 def process_group(group):
-    def default_value():
-        return 0
-
-    local_edges = defaultdict(default_value)
+    local_edges = {}
     users = group["userId"].values
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
-            local_edges[(users[i].item(), users[j].item())] += 1
-            local_edges[(users[j].item(), users[i].item())] += 1
+            user_pair = tuple(sorted((users[i].item(), users[j].item())))
+            local_edges[user_pair] = 1
     return local_edges
 
 
