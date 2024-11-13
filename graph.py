@@ -39,11 +39,14 @@ cpus = os.cpu_count()
 print(f"Using {cpus} CPUs")
 
 with ProcessPoolExecutor(max_workers=cpus) as executor:
+    movie_id_grouped_ratings = ratings_filtered.groupby("movieId")
+
+    # Take only the first 5
+    movie_id_grouped_ratings = list(movie_id_grouped_ratings)[:5]
+
     futures = {
         executor.submit(process_group, group): movie_id
-        for movie_id, group in tqdm(
-            ratings_filtered.groupby("movieId"), desc="Creating tasks"
-        )
+        for movie_id, group in tqdm(movie_id_grouped_ratings, desc="Creating tasks")
     }
 
     print("Processing ratings")
