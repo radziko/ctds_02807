@@ -163,3 +163,5 @@ cython_debug/
 
 data/*
 .venv
+movie_lsh_optimized.npz
+movie_lsh_state.npy
