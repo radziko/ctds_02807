@@ -26,12 +26,12 @@ rating_filtered_len = len(ratings_filtered)
 
 print(f"Ratings left after filtering: {rating_filtered_len}/{org_len}")
 
-# Only take the top 1000 movies ordered by the number of ratings
-top_movies = ratings_filtered["movieId"].value_counts().head(1000).index
+# # Only take the top 1000 movies ordered by the number of ratings
+# top_movies = ratings_filtered["movieId"].value_counts().head(1000).index
 
-ratings_filtered = ratings_filtered[ratings_filtered["movieId"].isin(top_movies)]
+# ratings_filtered = ratings_filtered[ratings_filtered["movieId"].isin(top_movies)]
 
-print(f"Movies left after filtering: {len(top_movies)}/{len(movie_descs)}")
+# print(f"Movies left after filtering: {len(top_movies)}/{len(movie_descs)}")
 
 
 # %%
@@ -83,4 +83,4 @@ edges_table = pa.Table.from_pandas(
 
 # %%
 # Save the table to a file
-edges_table.to_pandas().to_parquet("data/edges.parquet")
+edges_table.to_pandas().to_parquet("data/edges-movie-all.parquet")

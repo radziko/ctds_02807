@@ -1,18 +1,13 @@
-import cugraph
-import cudf
+# %%
+import pandas as pd
+import networkx as nx
+from tqdm import tqdm
 
-# Read the data
-# We have a parquet table with the edges with columns "movie1", "movie2", "weight"
+edgelist = pd.read_parquet("data/edges.parquet")
+# %%
 
-edges = cudf.read_parquet("data/edges.parquet")
+# Create a graph from the edgelist
+G = nx.Graph()
 
-# Create graph
-G = cugraph.Graph()
-G.from_cudf_edgelist(edges, source="movie1", destination="movie2", edge_attr="weight")
-
-# Calculate weighted jaccard similarity
-
-jaccard_weighted = cugraph.jaccard(G, use_weight=True)
-
-# Write the results
-jaccard_weighted.to_pandas().to_parquet("data/jaccard_weighted.parquet")
+for _, row in tqdm(edgelist.iterrows()):
+    G.add_edge(row["movie1"], row["movie2"], weight=row["weight"])

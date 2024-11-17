@@ -1,7 +1,8 @@
 #!/bin/bash
 #BSUB -J GraphBuilder
 #BSUB -q hpc
-#BSUB -R "rusage[mem=8GB]"
+#BSUB -R "rusage[mem=16GB]"
+#BSUB -R "select[model == EPYC9554]"
 #BSUB -B
 #BSUB -N
 ##BSUB -u s204071@dtu.dk
