@@ -2,13 +2,14 @@ import networkx as nx
 import pandas as pd
 import pickle
 import numpy as np
-from collections import defaultdict, Counter
-from collections import Counter
+from collections import defaultdict
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+print("Loading graph...")
 with open("data/movie_graph.pickle", "rb") as f:
     G = pickle.load(f)
+print("Graph loaded!")
 
 
 def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool = True):
@@ -45,11 +46,15 @@ def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool =
     return predictions["movieId"].tolist()
 
 
+print("Loading data...")
 ratings = pd.read_csv("data/ml-32m/ratings.csv")
 movie_descs = pd.read_csv("data/movies_with_description.csv")
 ratings = ratings[ratings["movieId"].isin(movie_descs["movieId"])]
 ratings = ratings[ratings["rating"] >= 5.0]
+print("Data loaded!")
 
+
+print("Analysing predetermined users...")
 users_to_analyze = [304, 6741, 147001]
 
 preds = {u: [] for u in users_to_analyze}
@@ -67,6 +72,10 @@ with open("data/predictions.pickle", "wb") as f:
 with open("data/predictions_weighted.pickle", "wb") as f:
     pickle.dump(preds_weighted, f)
 
+print("Predictions saved!")
+
+print("Analysing random users...")
+
 # sample 1000 users that have at least 5 ratings
 users_to_analyze = (
     ratings["userId"]
@@ -74,11 +83,14 @@ users_to_analyze = (
     .sample(1000)
     .index
 )
+user_ratings_count = {}
 
-accuracies = []
-accuracies_weighted = []
+all_predicted_movies = []
+all_predict_movies_weighted = []
+all_correct_predictions = []
+all_correct_predictions_weighted = []
 
-K = 8
+K_MAX = 50
 TEST_SIZE = 0.2
 
 for user in tqdm(users_to_analyze, desc="Users"):
@@ -87,23 +99,41 @@ for user in tqdm(users_to_analyze, desc="Users"):
     if len(movies_watched) < 5:
         continue
 
+    user_ratings_count[user] = len(movies_watched)
+
     train_movies, test_movies = train_test_split(
         movies_watched, test_size=TEST_SIZE, random_state=42
     )
 
-    predicted_movies = predict_movies(G, train_movies, weighted=False)[:K]
-    predicted_movies_weighted = predict_movies(G, train_movies, weighted=True)[:K]
+    predicted_movies = predict_movies(G, train_movies, weighted=False)
+    predicted_movies_weighted = predict_movies(G, train_movies, weighted=True)
 
-    correct_predictions = any(movie in test_movies for movie in predicted_movies)
+    correct_predictions = any(
+        movie in test_movies
+        for movie in predicted_movies[: min(len(predicted_movies), K_MAX)]
+    )
     correct_predictions_weighted = any(
-        movie in test_movies for movie in predicted_movies_weighted
+        movie in test_movies
+        for movie in predicted_movies_weighted[
+            : min(len(predicted_movies_weighted), K_MAX)
+        ]
     )
 
-    accuracies.append(correct_predictions)
-    accuracies_weighted.append(correct_predictions_weighted)
+    all_predicted_movies.append(predicted_movies[: min(len(predicted_movies), K_MAX)])
+    all_predict_movies_weighted.append(
+        predicted_movies_weighted[: min(len(predicted_movies_weighted), K_MAX)]
+    )
 
-accuracy = sum(accuracies) / len(accuracies)
-print(f"Accuracy: {accuracy:.2f}")
+    all_correct_predictions.append(correct_predictions)
+    all_correct_predictions_weighted.append(correct_predictions_weighted)
 
-accuracy_weighted = sum(accuracies_weighted) / len(accuracies_weighted)
-print(f"Accuracy (weighted): {accuracy_weighted:.2f}")
+with open("data/evaluation.pickle", "wb") as f:
+    pickle.dump(
+        {
+            "users": users_to_analyze,
+            "user_ratings_count": user_ratings_count,
+            "correct_predictions": all_correct_predictions,
+            "correct_predictions_weighted": all_correct_predictions_weighted,
+        },
+        f,
+    )
