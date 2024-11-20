@@ -6,10 +6,10 @@ from collections import defaultdict
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-print("Loading graph...")
+print("Loading graph...", flush=True)
 with open("data/movie_graph.pickle", "rb") as f:
     G = pickle.load(f)
-print("Graph loaded!")
+print("Graph loaded!", flush=True)
 
 
 def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool = True):
@@ -46,15 +46,15 @@ def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool =
     return predictions["movieId"].tolist()
 
 
-print("Loading data...")
+print("Loading data...", flush=True)
 ratings = pd.read_csv("data/ml-32m/ratings.csv")
 movie_descs = pd.read_csv("data/movies_with_description.csv")
 ratings = ratings[ratings["movieId"].isin(movie_descs["movieId"])]
 ratings = ratings[ratings["rating"] >= 5.0]
-print("Data loaded!")
+print("Data loaded!", flush=True)
 
 
-print("Analysing predetermined users...")
+print("Analysing predetermined users...", flush=True)
 users_to_analyze = [304, 6741, 147001]
 
 preds = {u: [] for u in users_to_analyze}
@@ -72,9 +72,9 @@ with open("data/predictions.pickle", "wb") as f:
 with open("data/predictions_weighted.pickle", "wb") as f:
     pickle.dump(preds_weighted, f)
 
-print("Predictions saved!")
+print("Predictions saved!", flush=True)
 
-print("Analysing random users...")
+print("Analysing random users...", flush=True)
 
 # sample 1000 users that have at least 5 ratings
 users_to_analyze = (
