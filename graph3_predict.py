@@ -89,6 +89,8 @@ all_predicted_movies = []
 all_predict_movies_weighted = []
 all_correct_predictions = []
 all_correct_predictions_weighted = []
+all_train_movies = []
+all_test_movies = []
 
 K_MAX = 50
 TEST_SIZE = 0.2
@@ -104,6 +106,9 @@ for user in tqdm(users_to_analyze, desc="Users"):
     train_movies, test_movies = train_test_split(
         movies_watched, test_size=TEST_SIZE, random_state=42
     )
+
+    all_train_movies.append(train_movies)
+    all_test_movies.append(test_movies)
 
     predicted_movies = predict_movies(G, train_movies, weighted=False)
     predicted_movies_weighted = predict_movies(G, train_movies, weighted=True)
@@ -132,8 +137,12 @@ with open("data/evaluation.pickle", "wb") as f:
         {
             "users": users_to_analyze,
             "user_ratings_count": user_ratings_count,
+            "train_movies": all_train_movies,
+            "test_movies": all_test_movies,
             "correct_predictions": all_correct_predictions,
             "correct_predictions_weighted": all_correct_predictions_weighted,
+            "all_predicted_movies": all_predicted_movies,
+            "all_predict_movies_weighted": all_predict_movies_weighted,
         },
         f,
     )
