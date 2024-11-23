@@ -1,0 +1,47 @@
+direction: right
+
+ratings -> filter: "[{user: 1, movie: 1, rating: 5},\n{user: 1, movie: 2, rating: 5},\n{user: 1, movie: 3, rating: 5},\n{user: 2, movie: 1, rating: 4},\n{user: 2, movie: 3, rating: 5},\n{user: 2, movie: 2, rating: 5},\n{user: 3, movie: 1, rating: 5},\n{user: 3, movie: 2, rating: 5}]"
+
+filter -> group by user: "[{user: 1, movie: 1},\n{user: 1, movie: 2},\n{user: 1, movie: 3},\n{user: 2, movie: 3},\n{user: 2, movie: 2},\n{user: 3, movie: 1},\n{user: 3, movie: 2}]"
+
+group by user -> map: "[{user: 1, movies: [1, 2, 3]},\n{user: 2, movies: [3, 2]},\n{user: 3, movies: [1, 2]}]"
+
+map -> reduce1: "{user: 1, movies: [1, 2, 3]}"
+map -> reduce2: "{user: 2, movies: [3, 2]}"
+map -> reduce3: "{user: 3, movies: [1, 2]}"
+
+graph1: {
+  movie1 -- movie2
+  movie2 -- movie3
+  movie1 -- movie3
+  movie1.shape: circle
+  movie2.shape: circle
+  movie3.shape: circle
+}
+graph2: {
+  movie2 -- movie3
+  movie2.shape: circle
+  movie3.shape: circle
+}
+graph3: {
+  movie1 -- movie2
+  movie1.shape: circle
+  movie2.shape: circle
+}
+
+reduce1 -> graph1
+reduce2 -> graph2
+reduce3 -> graph3
+
+graph final: {
+  movie1 -- movie2: 2
+  movie2 -- movie3: 1
+  movie1 -- movie3: 1
+  movie1.shape: circle
+  movie2.shape: circle
+  movie3.shape: circle
+}
+graph1 -> collect
+graph2 -> collect
+graph3 -> collect
+collect -> graph final

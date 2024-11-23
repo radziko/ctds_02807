@@ -12,7 +12,12 @@ with open("data/movie_graph.pickle", "rb") as f:
 print("Graph loaded!", flush=True)
 
 
-def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool = True):
+def predict_movies(
+    G: nx.Graph,
+    user_watched_movies: list[int],
+    weighted: bool = True,
+    combination: bool = False,
+):
     """
     Predicts movies for a user based on their watched movies and a graph of movie relationships.
 
@@ -26,22 +31,46 @@ def predict_movies(G: nx.Graph, user_watched_movies: list[int], weighted: bool =
     """
     # Use a single dictionary for neighbor counts or weights
     recommendations = defaultdict(float)
+    recommendations_weighted = defaultdict(float)
 
     # Iterate over each watched movie and process its neighbors
     for movie in user_watched_movies:
         for neighbor, edge_attrs in G.adj[movie].items():
             if neighbor not in user_watched_movies:
                 weight = edge_attrs.get("weight", 1)
-                recommendations[neighbor] += weight if weighted else 1
+                recommendations[neighbor] += 1
+                recommendations_weighted[neighbor] += weight
 
     # Convert recommendations to a DataFrame and sort by the chosen metric
-    metric = "weight" if weighted else "count"
     predictions = (
         pd.DataFrame.from_dict(recommendations, orient="index")
         .reset_index()
-        .rename(columns={"index": "movieId", 0: metric})
-        .sort_values(by=metric, ascending=False)
+        .rename(columns={"index": "movieId", 0: "count"})
+        .sort_values(by="count", ascending=False)
     )
+
+    predictions_weighted = (
+        pd.DataFrame.from_dict(recommendations, orient="index")
+        .reset_index()
+        .rename(columns={"index": "movieId", 0: "weight"})
+        .sort_values(by="weight", ascending=False)
+    )
+
+    if combination:
+        new_predictions = predictions.merge(
+            predictions_weighted, on="movieId", how="inner"
+        )
+
+        new_predictions["combined"] = (
+            np.log(new_predictions["count"]) * new_predictions["weight"]
+        )
+
+        return new_predictions.sort_values(by="combined", ascending=False)[
+            "movieId"
+        ].tolist()
+
+    if weighted:
+        return predictions_weighted["movieId"].tolist()
 
     return predictions["movieId"].tolist()
 
@@ -59,18 +88,23 @@ users_to_analyze = [304, 6741, 147001]
 
 preds = {u: [] for u in users_to_analyze}
 preds_weighted = {u: [] for u in users_to_analyze}
+preds_combined = {u: [] for u in users_to_analyze}
 
 for user in users_to_analyze:
     movies_watched = ratings[ratings["userId"] == user]["movieId"].tolist()
 
     preds[user] = predict_movies(G, movies_watched, weighted=True)
     preds_weighted[user] = predict_movies(G, movies_watched, weighted=True)
+    preds_combined[user] = predict_movies(G, movies_watched, combination=True)
 
 with open("data/predictions.pickle", "wb") as f:
     pickle.dump(preds, f)
 
 with open("data/predictions_weighted.pickle", "wb") as f:
     pickle.dump(preds_weighted, f)
+
+with open("data/predictions_combined.pickle", "wb") as f:
+    pickle.dump(preds_combined, f)
 
 print("Predictions saved!", flush=True)
 
@@ -87,13 +121,15 @@ user_ratings_count = {}
 
 all_predicted_movies = []
 all_predict_movies_weighted = []
+all_predict_movies_combined = []
 all_correct_predictions = []
 all_correct_predictions_weighted = []
+all_correct_predictions_combined = []
 all_train_movies = []
 all_test_movies = []
 
 K_MAX = 50
-TEST_SIZE = 0.2
+TEST_SIZE = 2
 
 for user in tqdm(users_to_analyze, desc="Users"):
     movies_watched = ratings[ratings["userId"] == user]["movieId"].tolist()
@@ -112,6 +148,7 @@ for user in tqdm(users_to_analyze, desc="Users"):
 
     predicted_movies = predict_movies(G, train_movies, weighted=False)
     predicted_movies_weighted = predict_movies(G, train_movies, weighted=True)
+    predicted_movies_combined = predict_movies(G, train_movies, combination=True)
 
     correct_predictions = any(
         movie in test_movies
@@ -123,14 +160,24 @@ for user in tqdm(users_to_analyze, desc="Users"):
             : min(len(predicted_movies_weighted), K_MAX)
         ]
     )
+    correct_predictions_combined = any(
+        movie in test_movies
+        for movie in predicted_movies_combined[
+            : min(len(predicted_movies_combined), K_MAX)
+        ]
+    )
 
     all_predicted_movies.append(predicted_movies[: min(len(predicted_movies), K_MAX)])
     all_predict_movies_weighted.append(
         predicted_movies_weighted[: min(len(predicted_movies_weighted), K_MAX)]
     )
+    all_predict_movies_combined.append(
+        predicted_movies_combined[: min(len(predicted_movies_combined), K_MAX)]
+    )
 
     all_correct_predictions.append(correct_predictions)
     all_correct_predictions_weighted.append(correct_predictions_weighted)
+    all_correct_predictions_combined.append(correct_predictions_combined)
 
 with open("data/evaluation.pickle", "wb") as f:
     pickle.dump(
@@ -141,8 +188,10 @@ with open("data/evaluation.pickle", "wb") as f:
             "test_movies": all_test_movies,
             "correct_predictions": all_correct_predictions,
             "correct_predictions_weighted": all_correct_predictions_weighted,
+            "correct_predictions_combined": all_correct_predictions_combined,
             "all_predicted_movies": all_predicted_movies,
             "all_predict_movies_weighted": all_predict_movies_weighted,
+            "all_predict_movies_combined": all_predict_movies_combined,
         },
         f,
     )
