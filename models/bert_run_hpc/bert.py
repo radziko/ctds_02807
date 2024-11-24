@@ -53,11 +53,18 @@ ml_movies_description = ml_movies.merge(merged_links, left_on='movieId', right_o
 #ml_movies_description.to_csv('data/movies_with_description.csv', index=False)
 #load in bert encoding model from huggingface
 
-from transformers import BertTokenizer, BertModel
+#!pip install transformers
+from transformers import AutoTokenizer, AutoModelForMaskedLM
 import torch
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
+#use the google bert model on cuda
+tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-base-uncased")
+
+#using bert model from huggingface - full model that returns (B,T,D) where B is the batch size, T is the token length 108 and D is the hidden size 768
+from transformers import BertModel
+model = BertModel.from_pretrained("bert-base-uncased", torch_dtype=torch.float16, attn_implementation="sdpa")
+
+#tokenize the descriptions
 inputs = tokenizer(ml_movies_description['description'].tolist(), return_tensors="pt", padding=True, truncation=True)
 
 import matplotlib.pyplot as plt
