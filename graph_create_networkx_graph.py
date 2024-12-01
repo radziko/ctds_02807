@@ -19,11 +19,3 @@ for _, row in tqdm(edgelist.iterrows(), total=total):
 # Save the graph to a pickle
 with open("data/movie_graph.pickle", "wb") as f:
     pickle.dump(G, f)
-
-# %%
-all_sims = nx.simrank_similarity(G)
-
-# %%
-# Save the similarities to a pickle
-with open("data/movie_similarities.pickle", "wb") as f:
-    pickle.dump(all_sims, f)
