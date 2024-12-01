@@ -12,5 +12,3 @@
 #BSUB -R "span[hosts=1]"
 
 source .venv/bin/activate
-
-python graph3_predict.py
